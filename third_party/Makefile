@@ -22,8 +22,7 @@ GEN_IMAGES= eagle.app.v6.out
 GEN_BINS= eagle.app.v6.bin
 SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=    \
-	user	\
-	lwip
+	user
 
 endif # } PDIR
 
@@ -47,15 +46,13 @@ ifeq ($(FLAVOR),release)
 endif
 
 COMPONENTS_eagle.app.v6 = \
-	user/libuser.a	\
-	lwip/liblwip.a
+	user/libuser.a
 
 LINKFLAGS_eagle.app.v6 = \
 	-L../lib        \
 	-nostdlib	\
     -T$(LD_FILE)   \
 	-Wl,--no-check-sections	\
-	-Wl,--gc-sections	\
     -u call_user_start	\
 	-Wl,-static						\
 	-Wl,--start-group					\
@@ -65,14 +62,15 @@ LINKFLAGS_eagle.app.v6 = \
 	-lphy	\
 	-lpp	\
 	-lnet80211	\
+	-llwip	\
 	-lwpa	\
 	-lcrypto	\
 	-lmain	\
 	-ljson	\
-	-lupgrade\
 	-lssl	\
-	-lpwm	\
+	-lupgrade	\
 	-lsmartconfig \
+	-lairkiss\
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group
 
@@ -94,8 +92,7 @@ DEPENDS_eagle.app.v6 = \
 #	-DTXRX_TXBUF_DEBUG
 #	-DTXRX_RXBUF_DEBUG
 #	-DWLAN_CONFIG_CCX
-CONFIGURATION_DEFINES =	-DICACHE_FLASH	\
-			-DLWIP_OPEN_SRC	\
+CONFIGURATION_DEFINES = -DLWIP_OPEN_SRC	\
 			-DPBUF_RSV_FOR_WLAN	\
 			-DEBUF_LWIP
 
