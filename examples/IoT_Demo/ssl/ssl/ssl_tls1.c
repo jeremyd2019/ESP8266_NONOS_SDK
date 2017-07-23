@@ -1319,7 +1319,9 @@ int ret = SSL_OK;
         /* do we violate the spec with the message size?  */
         if (ssl->need_bytes > RT_MAX_PLAIN_LENGTH+RT_EXTRA-BM_RECORD_OFFSET)
         {
-            ret = SSL_ERROR_INVALID_PROT_MSG;              
+            ret = SSL_ERROR_INVALID_PROT_MSG;
+            recvlength = 0;
+            os_printf("we violate the spec with the message size\n");
             goto error;
         }
 
@@ -1371,7 +1373,7 @@ int ret = SSL_OK;
             }
             else /* no client renegotiation allowed */
             {
-                ret = SSL_ERROR_NO_CLIENT_RENOG;              
+                ret = SSL_ERROR_NO_CLIENT_RENOG;
                 goto error;
             }
             break;

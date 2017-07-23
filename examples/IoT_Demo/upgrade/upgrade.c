@@ -44,6 +44,7 @@ upgrade_disconcb(void *arg)
     pespconn->proto.tcp = NULL;
     os_free(pespconn);
     pespconn = NULL;
+    upgrade_conn = NULL;
 }
 
 /******************************************************************************
@@ -95,6 +96,7 @@ LOCAL void ICACHE_FLASH_ATTR upgrade_10s_cb(struct espconn *pespconn)
     pespconn->proto.tcp = NULL;
     os_free(pespconn);
     pespconn = NULL;
+    upgrade_conn = NULL;
 }
 
 /******************************************************************************
@@ -276,7 +278,10 @@ system_upgrade_start(struct upgrade_server_info *server)
     if (system_upgrade_flag_check() == UPGRADE_FLAG_START) {
         return false;
     }
-
+    if (server == NULL) {
+    	UPGRADE_DBG("server is NULL\n");
+    	return false;
+    }
     if (upgrade_conn == NULL) {
         upgrade_conn = (struct espconn *)os_zalloc(sizeof(struct espconn));
     }

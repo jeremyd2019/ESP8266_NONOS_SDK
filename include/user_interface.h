@@ -41,33 +41,13 @@ struct rst_info{
 #define UPGRADE_FW_BIN1         0x00
 #define UPGRADE_FW_BIN2         0x01
 
-typedef void (*upgrade_states_check_callback)(void * arg);
-
-struct upgrade_server_info {
-    uint8 ip[4];
-    uint16 port;
-
-    uint8 upgrade_flag;
-
-    uint8 pre_version[8];
-    uint8 upgrade_version[8];
-
-    uint32 check_times;
-    uint8 *url;
-
-    upgrade_states_check_callback check_cb;
-    struct espconn *pespconn;
-};
-
-bool system_upgrade_start(struct upgrade_server_info *server);
-bool system_upgrade_start_ssl(struct upgrade_server_info *server);
-uint8 system_upgrade_userbin_check(void);
-void system_upgrade_reboot(void);
-
 void system_restore(void);
 void system_restart(void);
 void system_deep_sleep(uint32 time_in_us);
-
+uint8 system_upgrade_userbin_check(void);
+void system_upgrade_reboot(void);
+uint8 system_upgrade_flag_check();
+void system_upgrade_flag_set(uint8 flag);
 void system_timer_reinit(void);
 uint32 system_get_time(void);
 
@@ -104,6 +84,8 @@ bool system_rtc_mem_write(uint8 des_addr, const void *src_addr, uint16 save_size
 void system_uart_swap(void);
 
 uint16 system_adc_read(void);
+
+const char *system_get_sdk_version(void);
 
 #define NULL_MODE       0x00
 #define STATION_MODE    0x01
@@ -169,6 +151,11 @@ enum {
     STATION_GOT_IP
 };
 
+enum dhcp_status{
+	DHCP_ENABLE,
+	DHCP_DISABLE
+};
+
 uint8 wifi_station_get_connect_status(void);
 
 uint8 wifi_station_get_current_ap_id(void);
@@ -177,6 +164,7 @@ bool wifi_station_ap_number_set(uint8 ap_number);
 
 bool wifi_station_dhcpc_start(void);
 bool wifi_station_dhcpc_stop(void);
+enum dhcp_status wifi_station_dhcpc_status(void);
 
 typedef enum _auth_mode {
     AUTH_OPEN           = 0,
@@ -213,10 +201,12 @@ struct dhcps_lease {
 
 struct station_info * wifi_softap_get_station_info(void);
 void wifi_softap_free_station_info(void);
+bool wifi_station_get_ap_info(struct station_config config[]);
 
 bool wifi_softap_dhcps_start(void);
 bool wifi_softap_dhcps_stop(void);
 bool wifi_softap_set_dhcps_lease(struct dhcps_lease *please);
+enum dhcp_status wifi_softap_dhcps_status(void);
 
 #define STATION_IF      0x00
 #define SOFTAP_IF       0x01
@@ -249,5 +239,14 @@ enum phy_mode {
 
 enum phy_mode wifi_get_phy_mode(void);
 bool wifi_set_phy_mode(enum phy_mode mode);
+
+enum sleep_type {
+	NONE_SLEEP_T	= 0,
+	LIGHT_SLEEP_T,
+	MODEM_SLEEP_T
+};
+
+bool wifi_set_sleep_type(enum sleep_type type);
+enum sleep_type wifi_get_sleep_type(void);
 
 #endif

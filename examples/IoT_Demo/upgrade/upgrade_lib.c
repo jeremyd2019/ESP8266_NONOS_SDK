@@ -86,7 +86,7 @@ system_upgrade_internal(struct upgrade_param *upgrade, uint8 *data, uint16 len)
  * Parameters   :
  * Returns      :
 *******************************************************************************/
-LOCAL bool ICACHE_FLASH_ATTR
+bool ICACHE_FLASH_ATTR
 system_upgrade(uint8 *data, uint16 len)
 {
     bool ret;
@@ -102,7 +102,7 @@ system_upgrade(uint8 *data, uint16 len)
  * Parameters   :
  * Returns      :
 *******************************************************************************/
-LOCAL void ICACHE_FLASH_ATTR
+void ICACHE_FLASH_ATTR
 system_upgrade_init(void)
 {
     uint32 user_bin2_start;
@@ -137,7 +137,7 @@ system_upgrade_init(void)
  * Parameters   :
  * Returns      :
 *******************************************************************************/
-LOCAL void ICACHE_FLASH_ATTR
+void ICACHE_FLASH_ATTR
 system_upgrade_deinit(void)
 {
     os_free(upgrade);

@@ -187,6 +187,9 @@ user_platform_timer_first_start(uint16 count)
     }
 
     esp_platform_find_min_time(timer_wait_param, count);
+    if(min_wait_second == 0) {
+    	return;
+    }
 
     esp_platform_timer_action(timer_wait_param, count);
 }
@@ -328,6 +331,7 @@ user_platform_timer_start(char *pbuffer)
         str_end = indexof(pstr_start, "\"", str_begin);
 
         if (str_begin == str_end) {
+        	os_timer_disarm(&device_timer);
             return;
         }
 

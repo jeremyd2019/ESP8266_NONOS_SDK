@@ -17,7 +17,8 @@
 
 #include "espconn.h"
 #include "user_esp_platform.h"
-#include "version.h"
+#include "user_iot_version.h"
+#include "upgrade.h"
 
 #if ESP_PLATFORM
 
@@ -29,7 +30,7 @@
 #define ESP_DBG
 #endif
 
-#define ACTIVE_FRAME    "{\"nonce\": %d,\"path\": \"/v1/device/activate/\", \"method\": \"POST\", \"body\": {\"encrypt_method\": \"PLAIN\", \"token\": \"%s\", \"bssid\": \""MACSTR"\"}, \"meta\": {\"Authorization\": \"token %s\"}}\n"
+#define ACTIVE_FRAME    "{\"nonce\": %d,\"path\": \"/v1/device/activate/\", \"method\": \"POST\", \"body\": {\"encrypt_method\": \"PLAIN\", \"token\": \"%s\", \"bssid\": \""MACSTR"\",\"rom_version\":\"%s\"}, \"meta\": {\"Authorization\": \"token %s\"}}\n"
 
 #if PLUG_DEVICE
 #include "user_plug.h"
@@ -87,6 +88,7 @@ LOCAL struct esp_platform_saved_param esp_param;
 LOCAL uint8 device_status;
 LOCAL uint8 device_recon_count = 0;
 LOCAL uint32 active_nonce = 0;
+LOCAL uint8 iot_version[20] = {0};
 struct rst_info rtc_info;
 void user_esp_platform_check_ip(uint8 reset_flag);
 
@@ -543,7 +545,7 @@ user_esp_platform_sent(struct espconn *pespconn)
 
             wifi_get_macaddr(STATION_IF, bssid);
 
-            os_sprintf(pbuf, ACTIVE_FRAME, active_nonce, token, MAC2STR(bssid), devkey);
+            os_sprintf(pbuf, ACTIVE_FRAME, active_nonce, token, MAC2STR(bssid),iot_version, devkey);
         }
 
 #if SENSOR_DEVICE
@@ -580,7 +582,7 @@ user_esp_platform_sent(struct espconn *pespconn)
 
 #elif FLAMMABLE_GAS_SUB_DEVICE
         else {
-            uint32 adc_value = adc_read();
+            uint32 adc_value = system_adc_read();
 
             os_sprintf(pbuf, UPLOAD_FRAME, count, adc_value / 1024, adc_value * 1000 / 1024, devkey);
         }
@@ -872,9 +874,10 @@ user_esp_platform_recv_cb(void *arg, char *pusrdata, unsigned short length)
                 user_platform_rpc_set_rsp(pespconn, nonce);
 
                 server = (struct upgrade_server_info *)os_zalloc(sizeof(struct upgrade_server_info));
-                os_memcpy(server->upgrade_version, pstr + 12, 6);
-                server->upgrade_version[7] = '\0';
-                os_sprintf(server->pre_version, "v%d.%d.%d", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
+                os_memcpy(server->upgrade_version, pstr + 12, 16);
+                server->upgrade_version[15] = '\0';
+                os_sprintf(server->pre_version,"%s%d.%d.%dt%d(%s)",VERSION_TYPE,IOT_VERSION_MAJOR,\
+                    	IOT_VERSION_MINOR,IOT_VERSION_REVISION,device_type,UPGRADE_FALG);
                 user_esp_platform_upgrade_begin(pespconn, server);
             }
         } else if ((pstr = (char *)os_strstr(pbuffer, "\"action\": \"sys_reboot\"")) != NULL) {
@@ -1242,6 +1245,11 @@ user_esp_platform_check_ip(uint8 reset_flag)
 void ICACHE_FLASH_ATTR
 user_esp_platform_init(void)
 {
+
+	os_sprintf(iot_version,"%s%d.%d.%dt%d(%s)",VERSION_TYPE,IOT_VERSION_MAJOR,\
+	IOT_VERSION_MINOR,IOT_VERSION_REVISION,device_type,UPGRADE_FALG);
+	os_printf("IOT VERSION = %s\n",iot_version);
+
     user_esp_platform_load_param(&esp_param);
 
     system_rtc_mem_read(0,&rtc_info,sizeof(struct rst_info));
