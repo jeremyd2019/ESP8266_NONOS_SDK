@@ -1,5 +1,5 @@
 download:
-boot_v1.3+.bin      0x00000
+boot_v1.2+.bin      0x00000
 user1.1024.new.bin  0x01000
 blank.bin           0x7e000 & 0xfe000
 
