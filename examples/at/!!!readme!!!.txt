@@ -1,4 +1,4 @@
-Notice: AT added some functions so it's larger than before, if you want to compile it, please change the correspondence ld file, for example "eagle.app.v6.new.512.app1.ld"(compile for 512KB flash user1.bin with new boot), "irom0_0_seg : org = 0x40201010, len = 0x2B000",change "len = 0x2B000" to be "len = 0x31000"
+Notice: AT added some functions so it's larger than before, if you want to compile it, please compile it as 1024KB or larger flash in compilation STEP 5.
 
 1¡¢compile options
 

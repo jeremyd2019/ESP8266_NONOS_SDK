@@ -1,9 +1,9 @@
-Notice: boot_v1.1 is deprecated.
-
 download:
-boot_v1.2+.bin     0x00000
-user1.512.new.bin  0x01000
-blank.bin          0x3e000 & 0x7e000
+boot_v1.3+.bin      0x00000
+user1.1024.new.bin  0x01000
+blank.bin           0x7e000 & 0xfe000
+
+*NOTICE*: If you use Esp Flash Download Tool, please MAKE SURE to choose FLASH SIZE to 8Mbit.
 
 
 Update steps
@@ -14,7 +14,7 @@ ex. AT+CWMODE=3
     AT+RST
 
 2.Make sure TE got ip address
-ex. AT+CWJAP="ssid","password"
+ex. AT+CWJAP="ssid","12345678"
     OK
 
     AT+CIFSR
