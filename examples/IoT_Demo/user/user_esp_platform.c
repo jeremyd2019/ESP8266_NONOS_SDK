@@ -442,7 +442,8 @@ LOCAL void ICACHE_FLASH_ATTR
 user_esp_platform_discon_cb(void *arg)
 {
     struct espconn *pespconn = arg;
-
+    struct ip_info ipconfig;
+	struct dhcp_client_info dhcp_info;
     ESP_DBG("user_esp_platform_discon_cb\n");
 
 #if (PLUG_DEVICE || LIGHT_DEVICE)
@@ -463,6 +464,15 @@ user_esp_platform_discon_cb(void *arg)
 #ifdef SENSOR_DEEP_SLEEP
 
     if (wifi_get_opmode() == STATION_MODE) {
+    	/***add by tzx for saving ip_info to avoid dhcp_client start****/
+    	wifi_get_ip_info(STATION_IF, &ipconfig);
+
+    	dhcp_info.ip_addr = ipconfig.ip;
+    	dhcp_info.netmask = ipconfig.netmask;
+    	dhcp_info.gw = ipconfig.gw ;
+    	dhcp_info.flag = 0x01;
+    	os_printf("dhcp_info.ip_addr = %d\n",dhcp_info.ip_addr);
+    	system_rtc_mem_write(64,&dhcp_info,sizeof(struct dhcp_client_info));
         user_sensor_deep_sleep_enter();
     } else {
         os_timer_disarm(&client_timer);
@@ -733,7 +743,7 @@ user_esp_platform_upgrade_rsp(void *arg)
         ESP_DBG("user_esp_platform_upgarde_successfully\n");
         action = "device_upgrade_success";
         os_sprintf(pbuf, UPGRADE_FRAME, devkey, action, server->pre_version, server->upgrade_version);
-        ESP_DBG(pbuf);
+        ESP_DBG("%s", pbuf);
 
 #ifdef CLIENT_SSL_ENABLE
         espconn_secure_sent(pespconn, pbuf, os_strlen(pbuf));
@@ -749,7 +759,7 @@ user_esp_platform_upgrade_rsp(void *arg)
         ESP_DBG("user_esp_platform_upgrade_failed\n");
         action = "device_upgrade_failed";
         os_sprintf(pbuf, UPGRADE_FRAME, devkey, action,server->pre_version, server->upgrade_version);
-        ESP_DBG(pbuf);
+        ESP_DBG("%s", pbuf);
 
 #ifdef CLIENT_SSL_ENABLE
         espconn_secure_sent(pespconn, pbuf, os_strlen(pbuf));
@@ -809,7 +819,7 @@ user_esp_platform_upgrade_begin(struct espconn *pespconn, struct upgrade_server_
     os_sprintf(server->url, "GET /v1/device/rom/?action=download_rom&version=%s&filename=%s HTTP/1.0\r\nHost: "IPSTR":%d\r\n"pheadbuffer"",
                server->upgrade_version, user_bin, IP2STR(server->ip),
                server->port, devkey);
-    ESP_DBG(server->url);
+    ESP_DBG("%s", server->url);
 
 #ifdef UPGRADE_SSL_ENABLE
 
@@ -946,17 +956,22 @@ LOCAL void ICACHE_FLASH_ATTR
 user_esp_platform_ap_change(void)
 {
     uint8 current_id;
-
+    uint8 i = 0;
     ESP_DBG("user_esp_platform_ap_is_changing\n");
-
 
     current_id = wifi_station_get_current_ap_id();
     ESP_DBG("current ap id =%d\n", current_id);
 
     if (current_id == AP_CACHE_NUMBER - 1) {
-        wifi_station_ap_change(0);
+       i = 0;
     } else {
-        wifi_station_ap_change(current_id + 1);
+       i = current_id + 1;
+    }
+    while (wifi_station_ap_change(i) != true) {
+       i++;
+       if (i == AP_CACHE_NUMBER - 1) {
+    	   i = 0;
+       }
     }
 
     /* just need to re-check ip while change AP */
@@ -1259,6 +1274,25 @@ exception (%d): \n",rtc_info.flag,rtc_info.epc1,rtc_info.epc2,rtc_info.epc3,rtc_
      }
     struct rst_info info = {0};
     system_rtc_mem_write(0,&info,sizeof(struct rst_info));
+	/***add by tzx for saving ip_info to avoid dhcp_client start****/
+    struct dhcp_client_info dhcp_info;
+    struct ip_info sta_info;
+    system_rtc_mem_read(64,&dhcp_info,sizeof(struct dhcp_client_info));
+	if(dhcp_info.flag == 0x01 ) {
+		if (true == wifi_station_dhcpc_status())
+		{
+			wifi_station_dhcpc_stop();
+		}
+		sta_info.ip = dhcp_info.ip_addr;
+		sta_info.gw = dhcp_info.gw;
+		sta_info.netmask = dhcp_info.netmask;
+		if ( true != wifi_set_ip_info(STATION_IF,&sta_info)) {
+			os_printf("set default ip wrong\n");
+		}
+	}
+    os_memset(&dhcp_info,0,sizeof(struct dhcp_client_info));
+    system_rtc_mem_write(64,&dhcp_info,sizeof(struct rst_info));
+
 
 #if AP_CACHE
     wifi_station_ap_number_set(AP_CACHE_NUMBER);

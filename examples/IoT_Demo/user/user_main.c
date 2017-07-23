@@ -9,6 +9,7 @@
  *     2014/1/1, v1.0 create this file.
 *******************************************************************************/
 #include "ets_sys.h"
+#include "osapi.h"
 
 #include "user_interface.h"
 
