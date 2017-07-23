@@ -70,6 +70,7 @@ LINKFLAGS_eagle.app.v6 = \
 	-ljson	\
 	-lupgrade\
 	-lssl	\
+	-lpwm	\
 	-lsmartconfig \
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group
