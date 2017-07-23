@@ -338,9 +338,7 @@ wifi_station_set(struct jsontree_context *js_ctx, struct jsonparse_state *parser
                     jsonparse_next(parser);
                     jsonparse_copy_value(parser, buffer, sizeof(buffer));
                     os_memcpy(sta_conf->ssid, buffer, os_strlen(buffer));
-                }
-
-                if (jsonparse_strcmp_value(parser, "password") == 0) {
+                } else if (jsonparse_strcmp_value(parser, "password") == 0) {
                     jsonparse_next(parser);
                     jsonparse_next(parser);
                     jsonparse_copy_value(parser, buffer, sizeof(buffer));
@@ -349,7 +347,7 @@ wifi_station_set(struct jsontree_context *js_ctx, struct jsonparse_state *parser
 
 #if ESP_PLATFORM
 
-                if (jsonparse_strcmp_value(parser, "token") == 0) {
+                else if (jsonparse_strcmp_value(parser, "token") == 0) {
                     jsonparse_next(parser);
                     jsonparse_next(parser);
                     jsonparse_copy_value(parser, buffer, sizeof(buffer));
@@ -502,16 +500,12 @@ wifi_softap_set(struct jsontree_context *js_ctx, struct jsonparse_state *parser)
                     jsonparse_next(parser);
                     jsonparse_next(parser);
                     ap_conf->channel = jsonparse_get_value_as_int(parser);
-                }
-
-                if (jsonparse_strcmp_value(parser, "ssid") == 0) {
+                } else if (jsonparse_strcmp_value(parser, "ssid") == 0) {
                     jsonparse_next(parser);
                     jsonparse_next(parser);
                     jsonparse_copy_value(parser, buffer, sizeof(buffer));
                     os_memcpy(ap_conf->ssid, buffer, os_strlen(buffer));
-                }
-
-                if (jsonparse_strcmp_value(parser, "password") == 0) {
+                } else if (jsonparse_strcmp_value(parser, "password") == 0) {
                     jsonparse_next(parser);
                     jsonparse_next(parser);
                     jsonparse_copy_value(parser, buffer, sizeof(buffer));

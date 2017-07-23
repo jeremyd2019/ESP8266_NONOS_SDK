@@ -26,7 +26,8 @@ SUBDIRS=    \
 	driver	\
 	lwip	\
 	json	\
-	ssl
+	ssl	\
+	upgrade
 
 endif # } PDIR
 
@@ -64,7 +65,8 @@ COMPONENTS_eagle.app.v6 = \
 	driver/libdriver.a	\
 	lwip/liblwip.a	\
 	json/libjson.a	\
-	ssl/libssl.a
+	ssl/libssl.a	\
+	upgrade/libupgrade.a
 
 LINKFLAGS_eagle.app.v6 = \
 	-L../lib        \
@@ -78,12 +80,11 @@ LINKFLAGS_eagle.app.v6 = \
 	-lgcc					\
 	-lhal					\
 	-lphy	\
+	-lpp	\
 	-lnet80211	\
 	-lwpa	\
 	-lmain	\
 	-ljson	\
-	-lupgrade	\
-	-lupgrade_ssl	\
 	$(DEP_LIBS_eagle.app.v6)					\
 	-Wl,--end-group
 

@@ -25,7 +25,8 @@
 #include "lwip/app/espconn.h"
 
 espconn_msg *plink_active = NULL;
-remot_info premot[MEMP_NUM_TCP_PCB];
+espconn_msg *pserver_list = NULL;
+remot_info premot[5];
 uint32 link_timer = 0;
 
 /******************************************************************************
@@ -165,6 +166,7 @@ espconn_connect(struct espconn *espconn)
 	struct netif *eagle_netif;
 	struct ip_info ipinfo;
 	sint8 value = ESPCONN_OK;
+	espconn_msg *plist = NULL;
 
     if (espconn == NULL) {
         return ESPCONN_ARG;
@@ -193,6 +195,14 @@ espconn_connect(struct espconn *espconn)
     	}
     }
 
+    for (plist = plink_active; plist != NULL; plist = plist->pnext){
+    	if (plist->pespconn->type == ESPCONN_TCP){
+    		if (espconn->proto.tcp->local_port == plist->pespconn->proto.tcp->local_port){
+    			return ESPCONN_ISCONN;
+    		}
+    	}
+    }
+
     value = espconn_tcp_client(espconn);
 
     return value;
@@ -208,7 +218,7 @@ sint8 ICACHE_FLASH_ATTR
 espconn_create(struct espconn *espconn)
 {
 	sint8 value = ESPCONN_OK;
-	struct ip_addr ipaddr;
+	espconn_msg *plist = NULL;
 
 	if (espconn == NULL) {
 		return ESPCONN_ARG;
@@ -216,15 +226,15 @@ espconn_create(struct espconn *espconn)
 		return ESPCONN_ARG;
 	}
 
-	IP4_ADDR(&ipaddr, espconn->proto.udp->remote_ip[0],
-	    		espconn->proto.udp->remote_ip[1],
-	    		espconn->proto.udp->remote_ip[2],
-	    		espconn->proto.udp->remote_ip[3]);
+	for (plist = plink_active; plist != NULL; plist = plist->pnext){
+		if (plist->pespconn->type == ESPCONN_UDP){
+			if (espconn->proto.udp->local_port == plist->pespconn->proto.udp->local_port){
+				return ESPCONN_ISCONN;
+			}
+		}
+	}
 
-	if (ipaddr.addr == 0)
-		value = espconn_udp_server(espconn);
-	else
-		value = espconn_udp_client(espconn);
+	value = espconn_udp_server(espconn);
 
 	return value;
 }
@@ -267,6 +277,81 @@ espconn_sent(struct espconn *espconn, uint8 *psent, uint16 length)
             break;
     }
     return ESPCONN_OK;
+}
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_get_max_con
+ * Description  : get the number of simulatenously active TCP connections
+ * Parameters   : espconn -- espconn to set the connect callback
+ * Returns      : none
+*******************************************************************************/
+uint8 ICACHE_FLASH_ATTR espconn_tcp_get_max_con(void)
+{
+	uint8 tcp_num = 0;
+
+	tcp_num = MEMP_NUM_TCP_PCB;
+
+	return tcp_num;
+}
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_set_max_con
+ * Description  : set the number of simulatenously active TCP connections
+ * Parameters   : espconn -- espconn to set the connect callback
+ * Returns      : none
+*******************************************************************************/
+sint8 ICACHE_FLASH_ATTR espconn_tcp_set_max_con(uint8 num)
+{
+	if (num == 0)
+		return ESPCONN_ARG;
+
+	MEMP_NUM_TCP_PCB = num;
+	return ESPCONN_OK;
+}
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_get_max_con_allow
+ * Description  : get the count of simulatenously active connections on the server
+ * Parameters   : espconn -- espconn to get the count
+ * Returns      : result
+*******************************************************************************/
+sint8 ICACHE_FLASH_ATTR espconn_tcp_get_max_con_allow(struct espconn *espconn)
+{
+	espconn_msg *pget_msg = NULL;
+	if ((espconn == NULL) || (espconn->type == ESPCONN_UDP))
+		return ESPCONN_ARG;
+
+	pget_msg = pserver_list;
+	while (pget_msg != NULL){
+		if (pget_msg->pespconn == espconn){
+			return pget_msg->count_opt;
+		}
+		pget_msg = pget_msg->pnext;
+	}
+	return ESPCONN_ARG;
+}
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_set_max_con_allow
+ * Description  : set the count of simulatenously active connections on the server
+ * Parameters   : espconn -- espconn to set the count
+ * Returns      : result
+*******************************************************************************/
+sint8 ICACHE_FLASH_ATTR espconn_tcp_set_max_con_allow(struct espconn *espconn, uint8 num)
+{
+	espconn_msg *pset_msg = NULL;
+	if ((espconn == NULL) || (num > MEMP_NUM_TCP_PCB) || (espconn->type == ESPCONN_UDP))
+		return ESPCONN_ARG;
+
+	pset_msg = pserver_list;
+	while (pset_msg != NULL){
+		if (pset_msg->pespconn == espconn){
+			pset_msg->count_opt = num;
+			return ESPCONN_OK;
+		}
+		pset_msg = pset_msg->pnext;
+	}
+	return ESPCONN_ARG;
 }
 
 /******************************************************************************
@@ -413,7 +498,7 @@ espconn_get_connection_info(struct espconn *pespconn, remot_info **pcon_info, ui
 			break;
 		case ESPCONN_UDP:
 			while(plist != NULL){
-				if ((plist->pespconn->type == ESPCONN_UDP) && (plist->preverse != NULL)){
+				if (plist->pespconn->type == ESPCONN_UDP){
 					premot[pespconn->link_cnt].state = plist->pespconn->state;
 					premot[pespconn->link_cnt].remote_port = plist->pcommon.remote_port;
 					os_memcpy(premot[pespconn->link_cnt].remote_ip, plist->pcommon.remote_ip, 4);
@@ -439,11 +524,20 @@ sint8 ICACHE_FLASH_ATTR
 espconn_accept(struct espconn *espconn)
 {
 	sint8 value = ESPCONN_OK;
+	espconn_msg *plist = NULL;
+
     if (espconn == NULL) {
         return ESPCONN_ARG;
     } else if (espconn ->type != ESPCONN_TCP)
     	return ESPCONN_ARG;
 
+    for (plist = plink_active; plist != NULL; plist = plist->pnext){
+    	if (plist->pespconn->type == ESPCONN_TCP){
+    		if (espconn->proto.tcp->local_port == plist->pespconn->proto.tcp->local_port){
+    			return ESPCONN_ISCONN;
+    		}
+    	}
+    }
     value = espconn_tcp_server(espconn);
 
     return value;
@@ -517,7 +611,7 @@ espconn_delete(struct espconn *espconn)
     if (espconn == NULL) {
         return ESPCONN_ARG;
     } else if (espconn ->type != ESPCONN_UDP)
-    	return ESPCONN_ARG;
+    	return espconn_tcp_delete(espconn);
 
     value = espconn_find_connection(espconn, &pnode);
 

@@ -16,6 +16,7 @@
 #include "lwip/ip.h"
 #include "lwip/init.h"
 #include "lwip/tcp_impl.h"
+#include "lwip/memp.h"
 
 #include "ets_sys.h"
 #include "os_type.h"
@@ -25,6 +26,7 @@
 
 extern espconn_msg *plink_active;
 extern uint32 link_timer;
+extern espconn_msg *pserver_list;
 
 static err_t
 espconn_client_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
@@ -119,6 +121,11 @@ espconn_tcp_disconnect_successful(void *arg)
 			pcb = pdiscon_cb->pcommon.pcb;
 			tcp_arg(pcb, NULL);
 			tcp_err(pcb, NULL);
+			/*delete TIME_WAIT State pcb after 2MSL time,for not all data received by application.*/
+//			if (pcb->state == TIME_WAIT){
+//				tcp_pcb_remove(&tcp_tw_pcbs,pcb);
+//				memp_free(MEMP_TCP_PCB,pcb);
+//			}
 		}
 		os_free(pdiscon_cb);
 		pdiscon_cb = NULL;
@@ -818,7 +825,7 @@ espconn_tcp_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 	espconn_copy_partial(paccept->pespconn, espconn);
 	espconn_get_connection_info(espconn, &pinfo , 0);
 	espconn_printf("espconn_tcp_accept link_cnt: %d\n", espconn->link_cnt);
-	if (espconn->link_cnt == MEMP_NUM_TCP_PCB + 1)
+	if (espconn->link_cnt == espconn_tcp_get_max_con_allow(espconn) + 1)
 		return ERR_ISCONN;
 
 	tcp_sent(pcb, espconn_server_sent);
@@ -843,23 +850,81 @@ sint8 ICACHE_FLASH_ATTR
 espconn_tcp_server(struct espconn *espconn)
 {
     struct tcp_pcb *pcb = NULL;
+    espconn_msg *pserver = NULL;
+
+    pserver = (espconn_msg *)os_zalloc(sizeof(espconn_msg));
+    if (pserver == NULL){
+    	return ESPCONN_MEM;
+    }
 
     pcb = tcp_new();
     if (pcb == NULL) {
-        espconn ->state = ESPCONN_NONE;
+//        espconn ->state = ESPCONN_NONE;
+    	os_free(pserver);
+    	pserver = NULL;
         return ESPCONN_MEM;
     } else {
         tcp_bind(pcb, IP_ADDR_ANY, espconn->proto.tcp->local_port);
         pcb = tcp_listen(pcb);
         if (pcb != NULL) {
+        	/*insert the node to the active connection list*/
+        	espconn_list_creat(&pserver_list, pserver);
+        	pserver->preverse = pcb;
+        	pserver->pespconn = espconn;
+        	pserver->count_opt = MEMP_NUM_TCP_PCB;
+
             espconn ->state = ESPCONN_LISTEN;
             tcp_arg(pcb, (void *)espconn);
 //            tcp_err(pcb, esponn_server_err);
             tcp_accept(pcb, espconn_tcp_accept);
             return ESPCONN_OK;
         } else {
-            espconn ->state = ESPCONN_NONE;
+//            espconn ->state = ESPCONN_NONE;
+        	os_free(pserver);
+        	pserver = NULL;
             return ESPCONN_MEM;
         }
     }
+}
+
+/******************************************************************************
+ * FunctionName : espconn_tcp_delete
+ * Description  : delete the server: delete a listening PCB and free it
+ * Parameters   : pdeletecon -- the espconn used to delete a server
+ * Returns      : none
+*******************************************************************************/
+sint8 ICACHE_FLASH_ATTR espconn_tcp_delete(struct espconn *pdeletecon)
+{
+	err_t err;
+	remot_info *pinfo = NULL;
+	espconn_msg *pdelete_msg = NULL;
+	struct tcp_pcb *pcb = NULL;
+
+	if (pdeletecon == NULL)
+		return ESPCONN_ARG;
+
+	espconn_get_connection_info(pdeletecon, &pinfo , 0);
+	if (pdeletecon->link_cnt != 0)
+		return ESPCONN_INPROGRESS;
+	else {
+		os_printf("espconn_tcp_delete %p\n",pdeletecon);
+		pdelete_msg = pserver_list;
+		while (pdelete_msg != NULL){
+			if (pdelete_msg->pespconn == pdeletecon){
+				/*remove the node from the client's active connection list*/
+				espconn_list_delete(&pserver_list, pdelete_msg);
+				pcb = pdelete_msg->preverse;
+				os_printf("espconn_tcp_delete %d\n",pcb->state);
+				err = tcp_close(pcb);
+				os_free(pdelete_msg);
+				pdelete_msg = NULL;
+				break;
+			}
+			pdelete_msg = pdelete_msg->pnext;
+		}
+		if (err == ERR_OK)
+			return err;
+		else
+			return ESPCONN_ARG;
+	}
 }

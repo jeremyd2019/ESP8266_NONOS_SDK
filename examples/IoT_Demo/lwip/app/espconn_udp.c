@@ -122,60 +122,6 @@ espconn_udp_sent(void *arg, uint8 *psent, uint16 length)
 }
 
 /******************************************************************************
- * FunctionName : espconn_udp_client_recv
- * Description  : This callback will be called when receiving a datagram.
- * Parameters   : arg -- user supplied argument
- *                upcb -- the udp_pcb which received data
- *                p -- the packet buffer that was received
- *                addr -- the remote IP address from which the packet was received
- *                port -- the remote port from which the packet was received
- * Returns      : none
-*******************************************************************************/
-#if 0
-static void ICACHE_FLASH_ATTR
-espconn_udp_client_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
-                        struct ip_addr *addr, u16_t port)
-{
-    struct espconn *pespconn = NULL;
-    struct pbuf *q = NULL;
-    u8_t *pdata = NULL;
-    u16_t length = 0;
-    pespconn = arg;
-    LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_client_recv %d %p\n", __LINE__, upcb));
-
-    upcb->remote_port = port;
-    upcb->remote_ip = *addr;
-
-    os_memcpy(pespconn->proto.udp->ipaddr, addr, 4);
-
-    if (p != NULL) {
-        q = p;
-
-        while (q != NULL) {
-            pdata = (char *)os_zalloc(q ->len + 1);
-            length = pbuf_copy_partial(q, pdata, q ->len, 0);
-
-            if (length != 0) {
-                LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_client_recv %d %d\n", __LINE__, length));
-                pespconn->esp_pcb = upcb;
-
-                if (pespconn->recv_callback != NULL) {
-                    pespconn->recv_callback(arg, pdata, length);
-                }
-            }
-
-            q = q ->next;
-            os_free(pdata);
-        }
-
-        pbuf_free(p);
-    } else {
-        return;
-    }
-}
-#endif
-
-/******************************************************************************
  * FunctionName : espconn_udp_server_recv
  * Description  : This callback will be called when receiving a datagram.
  * Parameters   : arg -- user supplied argument
@@ -193,6 +139,7 @@ espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     struct pbuf *q = NULL;
     u8_t *pdata = NULL;
     u16_t length = 0;
+    struct ip_info ipconfig;
 
     LWIP_DEBUGF(ESPCONN_UDP_DEBUG, ("espconn_udp_server_recv %d %p\n", __LINE__, upcb));
 
@@ -207,6 +154,21 @@ espconn_udp_recv(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     precv->pespconn->proto.udp->remote_port = port;
     precv->pcommon.remote_port = port;
     precv->pcommon.pcb = upcb;
+
+	if (wifi_get_opmode() != 1) {
+		wifi_get_ip_info(1, &ipconfig);
+
+		if (!ip_addr_netcmp((struct ip_addr *)precv->pespconn->proto.udp->remote_ip, &ipconfig.ip, &ipconfig.netmask)) {
+			wifi_get_ip_info(0, &ipconfig);
+		}
+	} else {
+		wifi_get_ip_info(0, &ipconfig);
+	}
+	upcb->local_ip = ipconfig.ip;
+	precv->pespconn->proto.udp->local_ip[0] = ip4_addr1_16(&upcb->local_ip);
+	precv->pespconn->proto.udp->local_ip[1] = ip4_addr2_16(&upcb->local_ip);
+	precv->pespconn->proto.udp->local_ip[2] = ip4_addr3_16(&upcb->local_ip);
+	precv->pespconn->proto.udp->local_ip[3] = ip4_addr4_16(&upcb->local_ip);
 
     if (p != NULL) {
         q = p;
@@ -252,55 +214,10 @@ void ICACHE_FLASH_ATTR espconn_udp_disconnect(espconn_msg *pdiscon)
 
     udp_remove(upcb);
 
-    if (pdiscon->preverse != NULL) {
-        espconn_list_delete(&plink_active, pdiscon);
-    } else {
-        espconn_list_delete(&plink_active, pdiscon);
-    }
+    espconn_list_delete(&plink_active, pdiscon);
 
     os_free(pdiscon);
     pdiscon = NULL;
-}
-
-/******************************************************************************
- * FunctionName : espconn_udp_client
- * Description  : Initialize the client: set up a PCB and bind it to the port
- * Parameters   : pespconn -- the espconn used to build client
- * Returns      : none
-*******************************************************************************/
-sint8 ICACHE_FLASH_ATTR
-espconn_udp_client(struct espconn *pespconn)
-{
-    struct udp_pcb *upcb;
-    struct ip_addr ipaddr;
-    espconn_msg *pclient = NULL;
-    pclient = (espconn_msg *)os_zalloc(sizeof(espconn_msg));
-
-    if (pclient == NULL) {
-        return ESPCONN_MEM;
-    }
-
-    IP4_ADDR(&ipaddr, pespconn->proto.udp->remote_ip[0],
-             pespconn->proto.udp->remote_ip[1],
-             pespconn->proto.udp->remote_ip[2],
-             pespconn->proto.udp->remote_ip[3]);
-
-    upcb = udp_new();
-
-    if (upcb == NULL) {
-        os_free(pclient);
-        pclient = NULL;
-        return ESPCONN_MEM;
-    } else {
-        pclient->pcommon.pcb = upcb;
-        pclient->preverse = NULL;
-        pclient->pespconn = pespconn;
-        espconn_list_creat(&plink_active, pclient);
-        udp_bind(upcb, IP_ADDR_ANY, pclient->pespconn->proto.udp->local_port);
-        udp_recv(upcb, espconn_udp_recv, (void *)pclient);
-        pclient->pcommon.err = udp_connect(upcb, &ipaddr, pclient->pespconn->proto.udp->remote_port);
-        return pclient->pcommon.err;
-    }
 }
 
 /******************************************************************************
@@ -327,7 +244,6 @@ espconn_udp_server(struct espconn *pespconn)
         }
 
         pserver->pcommon.pcb = upcb;
-        pserver->preverse = pespconn;
         pserver->pespconn = pespconn;
         espconn_list_creat(&plink_active, pserver);
         udp_bind(upcb, IP_ADDR_ANY, pserver->pespconn->proto.udp->local_port);

@@ -96,9 +96,9 @@
 #if (LWIP_UDP && (MEMP_NUM_UDP_PCB<=0))
   #error "If you want to use UDP, you have to define MEMP_NUM_UDP_PCB>=1 in your lwipopts.h"
 #endif
-#if (LWIP_TCP && (MEMP_NUM_TCP_PCB<=0))
-  #error "If you want to use TCP, you have to define MEMP_NUM_TCP_PCB>=1 in your lwipopts.h"
-#endif
+//#if (LWIP_TCP && (MEMP_NUM_TCP_PCB<=0))
+//  #error "If you want to use TCP, you have to define MEMP_NUM_TCP_PCB>=1 in your lwipopts.h"
+//#endif
 #if (LWIP_TCP && (TCP_WND > 0xffff))
   #error "If you want to use TCP, TCP_WND must fit in an u16_t, so, you have to reduce it in your lwipopts.h"
 #endif
@@ -294,6 +294,7 @@ lwip_init(void)
  
 #endif /* LWIP_UDP */
 #if LWIP_TCP
+  MEMP_NUM_TCP_PCB = 5;
   tcp_init();
   
 #endif /* LWIP_TCP */

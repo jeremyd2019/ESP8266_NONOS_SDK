@@ -99,7 +99,7 @@ struct tcp_pcb *tcp_tmp_pcb;
 
 /** Timer counter to handle calling slow-timer from tcp_tmr() */ 
 static u8_t tcp_timer;
-static u16_t tcp_new_port(void);//Éú³ÉÐÂµÄtcp±¾µØ¶Ë¿Ú
+static u16_t tcp_new_port(void);//ï¿½ï¿½ï¿½ï¿½Âµï¿½tcpï¿½ï¿½ï¿½Ø¶Ë¿ï¿½
 
 /**
  * Called periodically to dispatch TCP timers.
@@ -172,22 +172,22 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
      * or for a pcb that has been used and then entered the CLOSED state 
      * is erroneous, but this should never happen as the pcb has in those cases
      * been freed, and so any remaining handles are bogus. */
-     /*ÔÚCLOSED×´Ì¬ÏÂ¹Ø±ÕÒ»¸öpcbËÆºõÊÇ´íÎóµÄ£¬ 
-     *¾¡¹ÜÈç´Ë£¬Ò»µ©ÔÚÕâ¸ö×´Ì¬ÏÂ·ÖÅäÁË¶øÇÒ»¹Ã»ÓÐÊ¹ÓÃ,ÓÃ»§ÐèÒªÒ»Ð©°ì·¨À´ÊÍ·ÅËü 
-     *µ÷ÓÃÒ»¸öÒÑ¾­±»¹Ø±ÕµÄpcbµÄtcp_close(),(¼´2´Î)»òÕßÒ»¸öÒÑ¾­±»Ê¹ÓÃÁËÖ®ºó£¬½øÈëCLOSE×´Ì¬ÊÇ´íÎóµÄ 
-     *µ«ÔÚÕâÐ©Çé¿öÏÂ±»ÊÍ·ÅµÄpcbÊÇ²»»á´æÔÚµÄ,Òò´Ë£¬ÈÎºÎÊ£ÓàµÄ¾ä±ú¶¼ÊÇ¼ÙµÄ 
+     /*ï¿½ï¿½CLOSED×´Ì¬ï¿½Â¹Ø±ï¿½Ò»ï¿½ï¿½pcbï¿½Æºï¿½ï¿½Ç´ï¿½ï¿½ï¿½Ä£ï¿½ 
+     *ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Â·ï¿½ï¿½ï¿½ï¿½Ë¶ï¿½ï¿½Ò»ï¿½Ã»ï¿½ï¿½Ê¹ï¿½ï¿½,ï¿½Ã»ï¿½ï¿½ï¿½ÒªÒ»Ð©ï¿½ì·¨ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ 
+     *ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ø±Õµï¿½pcbï¿½ï¿½tcp_close(),(ï¿½ï¿½2ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ó£¬½ï¿½ï¿½ï¿½CLOSE×´Ì¬ï¿½Ç´ï¿½ï¿½ï¿½ï¿½ 
+     *ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½Â±ï¿½ï¿½Í·Åµï¿½pcbï¿½Ç²ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½,ï¿½ï¿½Ë£ï¿½ï¿½Îºï¿½Ê£ï¿½ï¿½Ä¾ï¿½ï¿½ï¿½Ç¼Ùµï¿½ 
      */  
-    err = ERR_OK;//Éè¶¨·µ»ØÖµ 
+    err = ERR_OK;//ï¿½è¶¨ï¿½ï¿½ï¿½ï¿½Öµ 
     if (pcb->local_port != 0) {
     	TCP_RMV(&tcp_bound_pcbs, pcb); 
     }
-    memp_free(MEMP_TCP_PCB, pcb);//ÔÚMEMP_TCP_PCBÄÚ´æ³ØÉè¶¨ÊÍ·ÅµôµÄpcb¶ÔÓ¦µÄµ¥ÔªÖµ,ÊÍ·ÅÄÚ´æ
+    memp_free(MEMP_TCP_PCB, pcb);//ï¿½ï¿½MEMP_TCP_PCBï¿½Ú´ï¿½ï¿½ï¿½è¶¨ï¿½Í·Åµï¿½ï¿½ï¿½pcbï¿½ï¿½Ó¦ï¿½Äµï¿½ÔªÖµ,ï¿½Í·ï¿½ï¿½Ú´ï¿½
     pcb = NULL;
     break;
   case LISTEN:
     err = ERR_OK;
-    tcp_pcb_remove(&tcp_listen_pcbs.pcbs, pcb);//´Ó¼àÌýµÄPCBÁÐ±íÖÐÉ¾³ý¶ÔÓ¦µÄpcb  
-    memp_free(MEMP_TCP_PCB_LISTEN, pcb);//ÔÚMEMP_TCP_PCB_LISTENÄÚ´æ³ØÖÐÉè¶¨ÊÍ·ÅµÄpcbµ¥ÔªÖµ  ,ÊÍ·ÅÄÚ´æ
+    tcp_pcb_remove(&tcp_listen_pcbs.pcbs, pcb);//ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½PCBï¿½Ð±ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½pcb  
+    memp_free(MEMP_TCP_PCB_LISTEN, pcb);//ï¿½ï¿½MEMP_TCP_PCB_LISTENï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½è¶¨ï¿½Í·Åµï¿½pcbï¿½ï¿½ÔªÖµ  ,ï¿½Í·ï¿½ï¿½Ú´ï¿½
     pcb = NULL;
     break;
   case SYN_SENT:
@@ -198,10 +198,10 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
     snmp_inc_tcpattemptfails();
     break;
   case SYN_RCVD:
-    err = tcp_send_fin(pcb);//¹¹ÔìÖ÷¶¯¹Ø±ÕFINÎÕÊÖ±¨ÎÄ
+    err = tcp_send_fin(pcb);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½FINï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½
     if (err == ERR_OK) {
       snmp_inc_tcpattemptfails();
-      pcb->state = FIN_WAIT_1;//×ªµ½FIN_WAIT_1×´Ì¬
+      pcb->state = FIN_WAIT_1;//×ªï¿½ï¿½FIN_WAIT_1×´Ì¬
     }
     break;
   case ESTABLISHED:
@@ -215,7 +215,7 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
     err = tcp_send_fin(pcb);
     if (err == ERR_OK) {
       snmp_inc_tcpestabresets();
-      pcb->state = LAST_ACK;//½øÈëLAST_ACKµÈ´ýACK³¬Ê±
+      pcb->state = LAST_ACK;//ï¿½ï¿½ï¿½ï¿½LAST_ACKï¿½È´ï¿½ACKï¿½ï¿½Ê±
     }
     break;
   default:
@@ -234,7 +234,7 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
     /* @todo: When implementing SO_LINGER, this must be changed somehow:
        If SOF_LINGER is set, the data should be sent and acked before close returns.
        This can only be valid for sequential APIs, not for the raw API. */
-    tcp_output(pcb);//µ÷ÓÃº¯Êý£¬·¢ËÍ¿ØÖÆ¿é¶ÓÁÐÖÐÊ£ÓàµÄ±¨ÎÄ£¬°üÀ¨FINÎÕÊÖ±¨ÎÄ¶Î
+    tcp_output(pcb);//ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê£ï¿½ï¿½Ä±ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½FINï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ä¶ï¿½
   }
   return err;
 }
@@ -254,17 +254,17 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
  *         another err_t if closing failed and pcb is not freed
  */
  /* 
- *Í¨¹ýPCB¹Ø±ÕÁ¬½ÓÎÕÊÖ 
- *¼àÌýÖÐµÄpcbÓ¦¸Ã±»ÊÍ·ÅµÄ£¬Ò²ÐíÓÀÔ¶Ò²²»»á±»Ê¹ÓÃÁË 
- *Èç¹û»¹Ã»ÓÐÁ¬½Ó»òÕßÔÙÒ²Ã»ÓÐ±»ÒýÓÃ,Á¬½ÓµÄpcbÓ¦¸Ã±»ÊÍ·ÅµÄ 
- *Èç¹ûÒ»¸öÁ¬½Ó±»½¨Á¢(ÖÁÉÙSYNÒÑ¾­±»½ÓÊÕ»òÕßÔÚÒ»¸ö¹Ø±ÕÖÐµÄ×´Ì¬) 
- *Á¬½Ó±»¹Ø±ÕÁË£¬¶øÇÒÊäÈëÁËÒ»¸öÕýÔÚ¹Ø±ÕµÄ×´Ì¬ 
- *pcb×Ô¶¯ÔÚtcp_slowtmr()ÊÍ·Å,ËùÒÔÒýÓÃËüÊÇ²»°²È«µÄ 
+ *Í¨ï¿½ï¿½PCBï¿½Ø±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
+ *ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½pcbÓ¦ï¿½Ã±ï¿½ï¿½Í·ÅµÄ£ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ô¶Ò²ï¿½ï¿½ï¿½á±»Ê¹ï¿½ï¿½ï¿½ï¿½ 
+ *ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½Ò²Ã»ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Óµï¿½pcbÓ¦ï¿½Ã±ï¿½ï¿½Í·Åµï¿½ 
+ *ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½SYNï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ø±ï¿½ï¿½Ðµï¿½×´Ì¬) 
+ *ï¿½ï¿½ï¿½Ó±ï¿½ï¿½Ø±ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ú¹Ø±Õµï¿½×´Ì¬ 
+ *pcbï¿½Ô¶ï¿½ï¿½ï¿½tcp_slowtmr()ï¿½Í·ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½È«ï¿½ï¿½ 
  */ 
 err_t
 tcp_close(struct tcp_pcb *pcb)
 {
-#if TCP_DEBUG	//TCP debugÐÅÏ¢£¬´òÓ¡pcbµÄ×´Ì¬
+#if TCP_DEBUG	//TCP debugï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ó¡pcbï¿½ï¿½×´Ì¬
   LWIP_DEBUGF(TCP_DEBUG, ("tcp_close: closing in "));
   tcp_debug_print_state(pcb->state);
 #endif /* TCP_DEBUG */
@@ -483,10 +483,10 @@ tcp_accept_null(void *arg, struct tcp_pcb *pcb, err_t err)
  * is able to accept incoming connections. The protocol control block
  * is reallocated in order to consume less memory. Setting the
  * connection to LISTEN is an irreversible process.
- *½«Ä³¸ö°ó¶¨µÄ¿ØÖÆ¿éÖÃÎªÕìÌý×´Ì¬
- * @param pcb the original tcp_pcb ²Ù×÷µÄ¿ØÖÆ¿é¶ÔÏó
+ *ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ó¶¨µÄ¿ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½×´Ì¬
+ * @param pcb the original tcp_pcb ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½
  * @param backlog the incoming connections queue limit
- * @return tcp_pcb used for listening, consumes less memory.Ö¸ÏòÕìÌý×´Ì¬µÄ¿ØÖÆ¿é
+ * @return tcp_pcb used for listening, consumes less memory.Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Ä¿ï¿½ï¿½Æ¿ï¿½
  *
  * @note The original tcp_pcb is freed. This function therefore has to be
  *       called like this:
@@ -519,7 +519,7 @@ tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog)
     }
   }
 #endif /* SO_REUSE */
-  lpcb = (struct tcp_pcb_listen *)memp_malloc(MEMP_TCP_PCB_LISTEN);//·ÖÅäÄÚ´æ³Ø¿Õ¼ä
+  lpcb = (struct tcp_pcb_listen *)memp_malloc(MEMP_TCP_PCB_LISTEN);//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ø¿Õ¼ï¿½
   if (lpcb == NULL) {
     return NULL;
   }
@@ -537,13 +537,13 @@ tcp_listen_with_backlog(struct tcp_pcb *pcb, u8_t backlog)
   }
   memp_free(MEMP_TCP_PCB, pcb);
 #if LWIP_CALLBACK_API
-  lpcb->accept = tcp_accept_null;//½ÓÊÜ¿Í»§¶ËÁ¬½ÓµÄÄ¬ÈÏ»Øµ÷º¯Êý
+  lpcb->accept = tcp_accept_null;//ï¿½ï¿½ï¿½Ü¿Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Ä¬ï¿½Ï»Øµï¿½ï¿½ï¿½ï¿½ï¿½
 #endif /* LWIP_CALLBACK_API */
 #if TCP_LISTEN_BACKLOG
   lpcb->accepts_pending = 0;
   lpcb->backlog = (backlog ? backlog : 1);
 #endif /* TCP_LISTEN_BACKLOG */
-  TCP_REG(&tcp_listen_pcbs.pcbs, (struct tcp_pcb *)lpcb);//¿ØÖÆ¿é¼ÓÈëtcp_listen_pcbsÁ´±íÊ×²¿
+  TCP_REG(&tcp_listen_pcbs.pcbs, (struct tcp_pcb *)lpcb);//ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½tcp_listen_pcbsï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½
   return (struct tcp_pcb *)lpcb;
 }
 
@@ -580,7 +580,7 @@ u32_t tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb)
  * This function should be called by the application when it has
  * processed the data. The purpose is to advertise a larger window
  * when the data has been processed.
- *Ó¦ÓÃ³ÌÐòÊý¾Ý´¦ÀíÍê±Ïºó£¬Í¨ÖªÄÚºË¸üÐÂ½ÓÊÕ´°¿Ú
+ *Ó¦ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½ï¿½Ïºï¿½Í¨Öªï¿½ÚºË¸ï¿½ï¿½Â½ï¿½ï¿½Õ´ï¿½ï¿½ï¿½
  * @param pcb the tcp_pcb for which data is read
  * @param len the amount of bytes that have been read by the application
  */
@@ -647,10 +647,10 @@ tcp_new_port(void)
 /**
  * Connects to another host. The function given as the "connected"
  * argument will be called when the connection has been established.
- *Ïò·þÎñÆ÷·¢ËÍÒ»¸öSYNÎÕÊÖ±¨ÎÄ
- * @param pcb the tcp_pcb used to establish the connection ²Ù×÷µÄ¿ØÖÆ¿é¶ÔÏó
- * @param ipaddr the remote ip address to connect to ·þÎñÆ÷IPµØÖ·
- * @param port the remote tcp port to connect to ·þÎñÆ÷¶Ë¿ÚºÅ
+ *ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½SYNï¿½ï¿½ï¿½Ö±ï¿½ï¿½ï¿½
+ * @param pcb the tcp_pcb used to establish the connection ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½
+ * @param ipaddr the remote ip address to connect to ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Ö·
+ * @param port the remote tcp port to connect to ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿Úºï¿½
  * @param connected callback function to call when connected (or on error)
  * @return ERR_VAL if invalid arguments are given
  *         ERR_OK if connect request has been sent
@@ -668,11 +668,11 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
 
   LWIP_DEBUGF(TCP_DEBUG, ("tcp_connect to port %"U16_F"\n", port));
   if (ipaddr != NULL) {
-    pcb->remote_ip = *ipaddr;//·þÎñÆ÷IPµØÖ·ÓÐÐ§£¬ÔÚÁ´½Ó¼ÇÂ¼ÖÐ¼ÇÂ¼¸ÃIPµØÖ·£¬·ñÔò·µ»Ø´íÎó
+    pcb->remote_ip = *ipaddr;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IPï¿½ï¿½Ö·ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¼ï¿½Â¼ï¿½Ð¼ï¿½Â¼ï¿½ï¿½IPï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»Ø´ï¿½ï¿½ï¿½
   } else {
     return ERR_VAL;
   }
-  pcb->remote_port = port;//¼ÇÂ¼·þÎñÆ÷¶Ë¿Ú(Ä¿µÄ¶Ë¿Ú)
+  pcb->remote_port = port;//ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¿ï¿½(Ä¿ï¿½Ä¶Ë¿ï¿½)
 
   /* check if we have a route to the remote host */
   if (ip_addr_isany(&(pcb->local_ip))) {
@@ -712,25 +712,25 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
     }
   }
 #endif /* SO_REUSE */
-  iss = tcp_next_iss();//³õÊ¼»¯ÐòºÅ
-  pcb->rcv_nxt = 0;//ÉèÖÃ·¢ËÍ´°¿ÚµÄ¸÷¸ö×Ö¶Î
+  iss = tcp_next_iss();//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½
+  pcb->rcv_nxt = 0;//ï¿½ï¿½ï¿½Ã·ï¿½ï¿½Í´ï¿½ï¿½ÚµÄ¸ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
   pcb->snd_nxt = iss;
   pcb->lastack = iss - 1;
   pcb->snd_lbb = iss - 1;
-  pcb->rcv_wnd = TCP_WND;//ÉèÖÃÄ¬ÈÏ½ÓÊÕ´°¿Ú¸÷¸ö×Ö¶ÎÖµ
+  pcb->rcv_wnd = TCP_WND;//ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½Ï½ï¿½ï¿½Õ´ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½Öµ
   pcb->rcv_ann_wnd = TCP_WND;
   pcb->rcv_ann_right_edge = pcb->rcv_nxt;
   pcb->snd_wnd = TCP_WND;
   /* As initial send MSS, we use TCP_MSS but limit it to 536.
      The send MSS is updated when an MSS option is received. */
-  pcb->mss = (TCP_MSS > 536) ? 536 : TCP_MSS;//³õÊ¼»¯×î´ó±¨ÎÄ¶Î´óÐ¡
+  pcb->mss = (TCP_MSS > 536) ? 536 : TCP_MSS;//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶Î´ï¿½Ð¡
 #if TCP_CALCULATE_EFF_SEND_MSS
   pcb->mss = tcp_eff_send_mss(pcb->mss, ipaddr);
 #endif /* TCP_CALCULATE_EFF_SEND_MSS */
-  pcb->cwnd = 1;//³õÊ¼»¯×èÈû´°¿Ú
+  pcb->cwnd = 1;//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   pcb->ssthresh = pcb->mss * 10;
 #if LWIP_CALLBACK_API
-  pcb->connected = connected;//×¢²áconnected»Øµ÷º¯Êý
+  pcb->connected = connected;//×¢ï¿½ï¿½connectedï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
 #else /* LWIP_CALLBACK_API */  
   LWIP_UNUSED_ARG(connected);
 #endif /* LWIP_CALLBACK_API */
@@ -738,7 +738,7 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
   /* Send a SYN together with the MSS option. */
   ret = tcp_enqueue_flags(pcb, TCP_SYN);
   if (ret == ERR_OK) {
-    /* SYN segment was enqueued, changed the pcbs state now ¿ØÖÆ¿éÉèÖÃÎªSYN_SENT ×´Ì¬*/
+    /* SYN segment was enqueued, changed the pcbs state now ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½ÎªSYN_SENT ×´Ì¬*/
     pcb->state = SYN_SENT;
     if (old_local_port != 0) {
       TCP_RMV(&tcp_bound_pcbs, pcb);
@@ -746,7 +746,7 @@ tcp_connect(struct tcp_pcb *pcb, ip_addr_t *ipaddr, u16_t port,
     TCP_REG(&tcp_active_pcbs, pcb);
     snmp_inc_tcpactiveopens();
 
-    tcp_output(pcb);//½«¿ØÖÆ¿éÉÏÁ´½ÓµÄ±¨ÎÄ·¢ËÍ³öÈ¥
+    tcp_output(pcb);//ï¿½ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÓµÄ±ï¿½ï¿½Ä·ï¿½ï¿½Í³ï¿½È¥
   }
   return ret;
 }
@@ -820,6 +820,8 @@ tcp_slowtmr(void)
            * connect to somebody (i.e., we are in SYN_SENT). */
           if (pcb->state != SYN_SENT) {
             pcb->rto = ((pcb->sa >> 3) + pcb->sv) << tcp_backoff[pcb->nrtx];
+//			if (pcb->rto >= TCP_MAXRTO)
+//            	pcb->rto >>= 1;
           }
 
           /* Reset the retransmission timer. */
@@ -1184,9 +1186,9 @@ tcp_kill_timewait(void)
 
 /**
  * Allocate a new tcp_pcb structure.
- *·ÖÅäÒ»¸öTCP¿ØÖÆ¿é½á¹¹£¬²¢³õÊ¼»¯Ïà¹Ø×Ö¶Î
- * @param prio priority for the new pcb	 				ÐÂ¿ØÖÆ¿éµÄÓÅÏÈ¼¶
- * @return a new tcp_pcb that initially is in state CLOSED	Ö¸ÏòÐÂ¿ØÖÆ¿éµÄÖ¸Õë
+ *ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½TCPï¿½ï¿½ï¿½Æ¿ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
+ * @param prio priority for the new pcb	 				ï¿½Â¿ï¿½ï¿½Æ¿ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½
+ * @return a new tcp_pcb that initially is in state CLOSED	Ö¸ï¿½ï¿½ï¿½Â¿ï¿½ï¿½Æ¿ï¿½ï¿½Ö¸ï¿½ï¿½
  */
 struct tcp_pcb *
 tcp_alloc(u8_t prio)
@@ -1194,7 +1196,7 @@ tcp_alloc(u8_t prio)
   struct tcp_pcb *pcb;
   u32_t iss;
   
-  pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);//ÉêÇëÄÚ´æ³Ø¿Õ¼ä
+  pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½Ø¿Õ¼ï¿½
   if (pcb == NULL) {
 	//os_printf("tcp_pcb memory is fail\n");
 	/* Try killing oldest connection in TIME-WAIT. */
@@ -1219,33 +1221,33 @@ tcp_alloc(u8_t prio)
     }
   }
   if (pcb != NULL) {
-    memset(pcb, 0, sizeof(struct tcp_pcb));						//Çå0
-    pcb->prio = prio;											//ÉèÖÃÓÅÏÈ¼¶
-    pcb->snd_buf = TCP_SND_BUF;							//¿ÉÊ¹ÓÃµÄ·¢ËÍ»º³åÇø´óÐ¡
-    pcb->snd_queuelen = 0;									//»º³åÇøËùÕ¼ÓÃµÄpbuf¸öÊý
-    pcb->rcv_wnd = TCP_WND;								//½ÓÊÕ´°¿Ú
-    pcb->rcv_ann_wnd = TCP_WND;							//Í¨¸æ½ÓÊÕ´°¿Ú
-    pcb->tos = 0;											//·þÎñÀàÐÍ
-    pcb->ttl = TCP_TTL;										//ttl×Ö¶Î
+    memset(pcb, 0, sizeof(struct tcp_pcb));						//ï¿½ï¿½0
+    pcb->prio = prio;											//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½
+    pcb->snd_buf = TCP_SND_BUF;							//ï¿½ï¿½Ê¹ï¿½ÃµÄ·ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡
+    pcb->snd_queuelen = 0;									//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Ãµï¿½pbufï¿½ï¿½ï¿½ï¿½
+    pcb->rcv_wnd = TCP_WND;								//ï¿½ï¿½ï¿½Õ´ï¿½ï¿½ï¿½
+    pcb->rcv_ann_wnd = TCP_WND;							//Í¨ï¿½ï¿½ï¿½ï¿½Õ´ï¿½ï¿½ï¿½
+    pcb->tos = 0;											//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    pcb->ttl = TCP_TTL;										//ttlï¿½Ö¶ï¿½
     /* As initial send MSS, we use TCP_MSS but limit it to 536.
        The send MSS is updated when an MSS option is received. */
-    pcb->mss = (TCP_MSS > 536) ? 536 : TCP_MSS;				//³õÊ¼»¯×î´ó±¨ÎÄ¶Î
-    pcb->rto = 3000 / TCP_SLOW_INTERVAL;					//³õÊ¼»¯³¬Ê±Ê±¼ä
-    pcb->sa = 0;											//³õÊ¼»¯ÓëRTTÏà¹ØµÄ²ÎÊý
-    pcb->sv = 3000 / TCP_SLOW_INTERVAL;
+    pcb->mss = (TCP_MSS > 536) ? 536 : TCP_MSS;				//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½
+    pcb->rto = 1000 / TCP_SLOW_INTERVAL;					//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ê±Ê±ï¿½ï¿½
+    pcb->sa = 0;											//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½RTTï¿½ï¿½ØµÄ²ï¿½ï¿½ï¿½
+    pcb->sv = 1000 / TCP_SLOW_INTERVAL;
     pcb->rtime = -1;
-    pcb->cwnd = 1;											//³õÊ¼»¯×èÈû´°¿Ú
-    iss = tcp_next_iss();										//»ñµÃ³õÊ¼ÐòÁÐºÅ
-    pcb->snd_wl2 = iss;										//³õÊ¼»¯·¢ËÍ´°¿Ú¸÷¸ö×Ö¶Î
+    pcb->cwnd = 1;											//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    iss = tcp_next_iss();										//ï¿½ï¿½Ã³ï¿½Ê¼ï¿½ï¿½ï¿½Ðºï¿½
+    pcb->snd_wl2 = iss;										//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Í´ï¿½ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½Ö¶ï¿½
     pcb->snd_nxt = iss;
     pcb->lastack = iss;
     pcb->snd_lbb = iss;   
-    pcb->tmr = tcp_ticks;										//¼ÇÂ¼¿ØÖÆ¿é´´½¨ÏµÍ³Ê±¼ä
+    pcb->tmr = tcp_ticks;										//ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Æ¿é´´ï¿½ï¿½ÏµÍ³Ê±ï¿½ï¿½
 
-    pcb->polltmr = 0;										//Çå¿ÕÖÜÆÚÐÔÊÂ¼þ¶¨Ê±Æ÷
+    pcb->polltmr = 0;										//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
 
 #if LWIP_CALLBACK_API
-    pcb->recv = tcp_recv_null;								//×¢²á½ÓÊÕÊý¾ÝµÄÄ¬ÈÏÉÏ²ãº¯Êý
+    pcb->recv = tcp_recv_null;								//×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½Ä¬ï¿½ï¿½ï¿½Ï²ãº¯ï¿½ï¿½
 #endif /* LWIP_CALLBACK_API */  
     
     /* Init KEEPALIVE timer */
@@ -1256,7 +1258,7 @@ tcp_alloc(u8_t prio)
     pcb->keep_cnt   = TCP_KEEPCNT_DEFAULT;
 #endif /* LWIP_TCP_KEEPALIVE */
 
-    pcb->keep_cnt_sent = 0;									//±¨ÎÄ·¢ËÍ´ÎÊý
+    pcb->keep_cnt_sent = 0;									//ï¿½ï¿½ï¿½Ä·ï¿½ï¿½Í´ï¿½ï¿½ï¿½
   }
   return pcb;
 }
@@ -1282,8 +1284,8 @@ tcp_new(void)
 /**
  * Used to specify the argument that should be passed callback
  * functions.
- *Ïò¿ØÖÆ¿éµÄcallback_arg×Ö¶Î×¢²áÓÃ»§Êý¾Ý£¬µ±tcp_recvµÈº¯Êý±»»Øµ÷Ê±ºò£¬
-* ¸Ã×Ö¶Î½«×÷Îª²ÎÊý´«µÝ¸ø¸÷¸öº¯Êý
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½callback_argï¿½Ö¶ï¿½×¢ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½tcp_recvï¿½Èºï¿½ï¿½ï¿½Øµï¿½Ê±ï¿½ï¿½
+* ï¿½ï¿½ï¿½Ö¶Î½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  * @param pcb tcp_pcb to set the callback argument
  * @param arg void pointer argument to pass to callback functions
  */ 
@@ -1297,7 +1299,7 @@ tcp_arg(struct tcp_pcb *pcb, void *arg)
 /**
  * Used to specify the function that should be called when a TCP
  * connection receives data.
- *Ïò¿ØÖÆ¿éµÄrecv×Ö¶Î×¢²áº¯Êý£¬ÊÕµ½Êý¾ÝÊ±»Øµ÷
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½recvï¿½Ö¶ï¿½×¢ï¿½áº¯ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ê±ï¿½Øµï¿½
  * @param pcb tcp_pcb to set the recv callback
  * @param recv callback function to call for this pcb when data is received
  */ 
@@ -1310,7 +1312,7 @@ tcp_recv(struct tcp_pcb *pcb, tcp_recv_fn recv)
 /**
  * Used to specify the function that should be called when TCP data
  * has been successfully delivered to the remote host.
- *Ïò¿ØÖÆ¿ésend ×Ö¶Î×¢²áº¯Êý£¬Êý¾Ý·¢ËÍ³É¹¦ºó»Øµ÷
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½send ï¿½Ö¶ï¿½×¢ï¿½áº¯ï¿½ï¿½ï¿½ï¿½Ý·ï¿½ï¿½Í³É¹ï¿½ï¿½ï¿½Øµï¿½
  * @param pcb tcp_pcb to set the sent callback
  * @param sent callback function to call for this pcb when data is successfully sent
  */ 
@@ -1323,7 +1325,7 @@ tcp_sent(struct tcp_pcb *pcb, tcp_sent_fn sent)
 /**
  * Used to specify the function that should be called when a fatal error
  * has occured on the connection.
- *Ïò¿ØÖÆ¿éerr ×Ö¶Î×¢²áº¯Êý£¬Óöµ½´íÎóºó»Øµ÷
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½err ï¿½Ö¶ï¿½×¢ï¿½áº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
  * @param pcb tcp_pcb to set the err callback
  * @param err callback function to call for this pcb when a fatal error
  *        has occured on the connection
@@ -1337,7 +1339,7 @@ tcp_err(struct tcp_pcb *pcb, tcp_err_fn err)
 /**
  * Used for specifying the function that should be called when a
  * LISTENing connection has been connected to another host.
- *Ïò¿ØÖÆ¿éµÄaccept×Ö¶Î×¢²áº¯Êý£¬ÕìÌýµ½Á¬½ÓÊ±»Øµ÷
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½acceptï¿½Ö¶ï¿½×¢ï¿½áº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½Øµï¿½
  * @param pcb tcp_pcb to set the accept callback
  * @param accept callback function to call for this pcb when LISTENing
  *        connection has been connected to another host
@@ -1354,7 +1356,7 @@ tcp_accept(struct tcp_pcb *pcb, tcp_accept_fn accept)
  * Used to specify the function that should be called periodically
  * from TCP. The interval is specified in terms of the TCP coarse
  * timer interval, which is called twice a second.
- *Ïò¿ØÖÆ¿éµÄPOLL×Ö¶Î×¢²áº¯Êý£¬¸Ãº¯ÊýÖÜÆÚÐÔ±»µ÷ÓÃ
+ *ï¿½ï¿½ï¿½ï¿½Æ¿ï¿½ï¿½POLLï¿½Ö¶ï¿½×¢ï¿½áº¯ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½
  */ 
 void
 tcp_poll(struct tcp_pcb *pcb, tcp_poll_fn poll, u8_t interval)

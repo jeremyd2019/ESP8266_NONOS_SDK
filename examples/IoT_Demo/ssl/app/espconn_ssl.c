@@ -1032,8 +1032,8 @@ espconn_ssl_accept(void *arg, struct tcp_pcb *pcb, err_t err)
 	os_memcpy(espconn->proto.tcp->remote_ip, paccept->pcommon.remote_ip, 4);
 	espconn->proto.tcp->remote_port = pcb->remote_port;
 
-	espconn_get_connection_info(espconn, &pinfo , 1);
-	if (espconn->link_cnt > 0x01)
+	espconn_get_connection_info(espconn, &pinfo , ESPCONN_SSL);
+	if (espconn->link_cnt == 0x01)
 		return ERR_ISCONN;
 
     pssl = (ssl_msg *)os_zalloc(sizeof(ssl_msg));

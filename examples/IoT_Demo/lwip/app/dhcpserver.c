@@ -16,7 +16,7 @@
 static const uint8_t xid[4] = {0xad, 0xde, 0x12, 0x23};
 static u8_t old_xid[4] = {0};
 static const uint8_t magic_cookie[4] = {99, 130, 83, 99};
-static struct udp_pcb *pcb_dhcps;
+static struct udp_pcb *pcb_dhcps = NULL;
 static struct ip_addr broadcast_dhcps;
 static struct ip_addr server_address;
 static struct ip_addr client_address;//added
@@ -24,6 +24,57 @@ static struct ip_addr client_address_plus;
 static struct dhcps_msg msg_dhcps;
 struct dhcps_state s;
 
+static struct dhcps_lease dhcps_lease;
+static bool dhcps_lease_flag = true;
+static list_node *plist = NULL;
+/******************************************************************************
+ * FunctionName : node_insert_to_list
+ * Description  : insert the node to the list
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+void ICACHE_FLASH_ATTR node_insert_to_list(list_node **phead, list_node* pinsert)
+{
+	list_node *plist = NULL;
+
+	if (*phead == NULL)
+		*phead = pinsert;
+	else {
+		plist = *phead;
+		while (plist->pnext != NULL) {
+			plist = plist->pnext;
+		}
+		plist->pnext = pinsert;
+	}
+	pinsert->pnext = NULL;
+}
+
+/******************************************************************************
+ * FunctionName : node_delete_from_list
+ * Description  : remove the node from list
+ * Parameters   : arg -- Additional argument to pass to the callback function
+ * Returns      : none
+*******************************************************************************/
+void ICACHE_FLASH_ATTR node_remove_from_list(list_node **phead, list_node* pdelete)
+{
+	list_node *plist = NULL;
+
+	plist = *phead;
+	if (plist == NULL){
+		*phead = NULL;
+	} else {
+		if (plist == pdelete){
+			*phead = plist->pnext;
+		} else {
+			while (plist != NULL) {
+				if (plist->pnext == pdelete){
+					plist->pnext = pdelete->pnext;
+				}
+				plist = plist->pnext;
+			}
+		}
+	}
+}
 ///////////////////////////////////////////////////////////////////////////////////
 /*
  * ��DHCP msg��Ϣ�ṹ����������
@@ -157,7 +208,7 @@ static uint8_t* ICACHE_FLASH_ATTR add_end(uint8_t *optptr)
 /*
  * ����һ��DHCP msg�ṹ��
  *
- * @param -- m ָ�򴴽���DHCP msg�ṹ�����??
+ * @param -- m ָ�򴴽���DHCP msg�ṹ�����?
  */
 ///////////////////////////////////////////////////////////////////////////////////
 static void ICACHE_FLASH_ATTR create_msg(struct dhcps_msg *m)
@@ -492,7 +543,7 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
         	os_printf("dhcps: len = %d\n", len);
 #endif
 	        /*
-         	 * ��¼��ǰ��xid���ﴦ���??
+         	 * ��¼��ǰ��xid���ﴦ���?
          	 * �˺�ΪDHCP�ͻ����������û�ͳһ��ȡIPʱ��
          	*/
 	        if((old_xid[0] == 0) &&
@@ -500,7 +551,7 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
 	           (old_xid[2] == 0) &&
 	           (old_xid[3] == 0)){
 	            /* 
-	             * old_xidδ��¼�κ����??
+	             * old_xidδ��¼�κ����?
 	             * �϶��ǵ�һ��ʹ��
 	            */
 	            os_memcpy((char *)old_xid, (char *)m->xid, sizeof(m->xid));
@@ -523,6 +574,10 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
 						struct station_info *next_station;
 						struct station_info *back_station = station;
 						uint8 find = 0;
+
+						struct dhcps_pool *pdhcps_pool = NULL;
+						list_node *pnode = NULL;
+						list_node *pback_node = NULL;
 
 						while(station) {
 							if (os_memcmp(station->bssid, m->chaddr, 6) == 0) {
@@ -550,14 +605,37 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
 							if (wifi_softap_set_station_info(m->chaddr, &client_address_plus) == false) {
 								return 0;
 							}
-							client_address.addr = client_address_plus.addr;
-							addr_tmp.addr =  htonl(client_address_plus.addr);
-							addr_tmp.addr++;
-							client_address_plus.addr = htonl(addr_tmp.addr);
 
-							if(ip4_addr4(&client_address_plus) > 0xC8){
-								ip4_addr4(&client_address_plus) = 0x64;
+							client_address.addr = client_address_plus.addr;
+//							addr_tmp.addr =  htonl(client_address_plus.addr);
+//							addr_tmp.addr++;
+//							client_address_plus.addr = htonl(addr_tmp.addr);
+							for (pback_node = plist; pback_node != NULL;pback_node = pback_node->pnext) {
+								pdhcps_pool = pback_node->pnode;
+								if (os_memcmp(pdhcps_pool->mac, m->chaddr, sizeof(pdhcps_pool->mac)) == 0){
+//									os_printf("the same device request ip\n");
+									client_address.addr = pdhcps_pool->ip.addr;
+									pdhcps_pool->lease_timer = DHCPS_LEASE_TIMER;
+									goto POOL_CHECK;
+								} else if (pdhcps_pool->ip.addr == client_address_plus.addr){
+//									client_address.addr = client_address_plus.addr;
+									addr_tmp.addr = htonl(client_address_plus.addr);
+									addr_tmp.addr++;
+									client_address_plus.addr = htonl(addr_tmp.addr);
+									client_address.addr = client_address_plus.addr;
+								}
 							}
+							pdhcps_pool = (struct dhcps_pool *)os_zalloc(sizeof(struct dhcps_pool));
+							pdhcps_pool->ip.addr = client_address.addr;
+							os_memcpy(pdhcps_pool->mac, m->chaddr, sizeof(pdhcps_pool->mac));
+							pdhcps_pool->lease_timer = DHCPS_LEASE_TIMER;
+							pnode = (list_node *)os_zalloc(sizeof(list_node ));
+							pnode->pnode = pdhcps_pool;
+							node_insert_to_list(&plist,pnode);
+
+							POOL_CHECK:
+							if (client_address_plus.addr > dhcps_lease.end_ip)
+								client_address_plus.addr = dhcps_lease.start_ip;
 						} else {
 							client_address.addr = station->ip.addr;
 						}
@@ -584,8 +662,8 @@ static sint16_t ICACHE_FLASH_ATTR parse_msg(struct dhcps_msg *m, u16_t len)
  * ��Ҫ����udp_recv()������LWIP����ע��.
  *
  * @param arg
- * @param pcb ���յ�UDP��Ŀ��ƿ�??
- * @param p ���յ���UDP�е��������??
+ * @param pcb ���յ�UDP��Ŀ��ƿ�?
+ * @param p ���յ���UDP�е��������?
  * @param addr ���ʹ�UDP���Դ�����IP��ַ
  * @param port ���ʹ�UDP���Դ�����UDPͨ���˿ں�
  */
@@ -682,26 +760,109 @@ static void ICACHE_FLASH_ATTR handle_dhcp(void *arg,
         pbuf_free(p);
 }
 ///////////////////////////////////////////////////////////////////////////////////
+static void ICACHE_FLASH_ATTR wifi_softap_init_dhcps_lease(uint32 ip)
+{
+	uint32 softap_ip = 0,local_ip = 0;
+
+	if (dhcps_lease_flag) {
+		local_ip = softap_ip = htonl(ip);
+		softap_ip &= 0xFFFFFF00;
+		local_ip &= 0xFF;
+		if (local_ip >= 0x80)
+			local_ip -= DHCPS_MAX_LEASE;
+		else
+			local_ip += DHCPS_MAX_LEASE;
+
+		os_bzero(&dhcps_lease, sizeof(dhcps_lease));
+		dhcps_lease.start_ip = softap_ip | local_ip;
+		dhcps_lease.end_ip = softap_ip | (local_ip + DHCPS_MAX_LEASE);
+	}
+	dhcps_lease.start_ip = htonl(dhcps_lease.start_ip);
+	dhcps_lease.end_ip= htonl(dhcps_lease.end_ip);
+//	os_printf("start_ip = 0x%x, end_ip = 0x%x\n",dhcps_lease.start_ip, dhcps_lease.end_ip);
+}
 ///////////////////////////////////////////////////////////////////////////////////
 void ICACHE_FLASH_ATTR dhcps_start(struct ip_info *info)
 {
-		os_memset(&msg_dhcps, 0, sizeof(dhcps_msg));
-		pcb_dhcps = udp_new();
-		if(pcb_dhcps==NULL){
-			os_printf("dhcps_start(): could not obtain pcb\n");
-		}
+	os_memset(&msg_dhcps, 0, sizeof(dhcps_msg));
+	pcb_dhcps = udp_new();
+	if (pcb_dhcps == NULL || info ==NULL) {
+		os_printf("dhcps_start(): could not obtain pcb\n");
+	}
 
-		IP4_ADDR(&broadcast_dhcps,255,255,255,255);
+	IP4_ADDR(&broadcast_dhcps, 255, 255, 255, 255);
 
-		server_address = info->ip;
-		IP4_ADDR(&client_address_plus,ip4_addr1(&info->ip),
-				ip4_addr2(&info->ip),
-				ip4_addr3(&info->ip),100);
+	server_address = info->ip;
+	wifi_softap_init_dhcps_lease(server_address.addr);
+	client_address_plus.addr = dhcps_lease.start_ip;
 
-        udp_bind(pcb_dhcps, IP_ADDR_ANY, DHCPS_SERVER_PORT );
-        udp_recv(pcb_dhcps, handle_dhcp, NULL);
+	udp_bind(pcb_dhcps, IP_ADDR_ANY, DHCPS_SERVER_PORT);
+	udp_recv(pcb_dhcps, handle_dhcp, NULL);
 #if DHCPS_DEBUG
-		os_printf("dhcps:dhcps_start->udp_recv function Set a receive callback handle_dhcp for UDP_PCB pcb_dhcps\n");
+	os_printf("dhcps:dhcps_start->udp_recv function Set a receive callback handle_dhcp for UDP_PCB pcb_dhcps\n");
 #endif
 		
+}
+
+void ICACHE_FLASH_ATTR dhcps_stop(void)
+{
+	udp_disconnect(pcb_dhcps);
+	udp_remove(pcb_dhcps);
+}
+
+bool ICACHE_FLASH_ATTR wifi_softap_set_dhcps_lease(struct dhcps_lease *please)
+{
+	struct ip_info info;
+	uint32 softap_ip = 0;
+	if (please == NULL)
+		return false;
+
+	os_bzero(&info, sizeof(struct ip_info));
+	wifi_get_ip_info(SOFTAP_IF, &info);
+	softap_ip = htonl(info.ip.addr);
+	please->start_ip = htonl(please->start_ip);
+	please->end_ip = htonl(please->end_ip);
+
+	/*config ip information can't contain local ip*/
+	if ((please->start_ip <= softap_ip) && (softap_ip <= please->end_ip))
+		return false;
+
+	/*config ip information must be in the same segment as the local ip*/
+	softap_ip >>= 8;
+	if ((please->start_ip >> 8 != softap_ip)
+			|| (please->end_ip >> 8 != softap_ip)) {
+		return false;
+	}
+
+	if (please->end_ip - please->start_ip > DHCPS_MAX_LEASE)
+		return false;
+
+	os_bzero(&dhcps_lease, sizeof(dhcps_lease));
+	dhcps_lease.start_ip = please->start_ip;
+	dhcps_lease.end_ip = please->end_ip;
+	dhcps_lease_flag = false;
+	return true;
+}
+
+void ICACHE_FLASH_ATTR dhcps_coarse_tmr(void)
+{
+	list_node *pback_node = NULL;
+	list_node *pnode = NULL;
+	struct dhcps_pool *pdhcps_pool = NULL;
+	pnode = plist;
+	while (pnode != NULL) {
+		pdhcps_pool = pnode->pnode;
+		pdhcps_pool->lease_timer --;
+		if (pdhcps_pool->lease_timer == 0){
+			pback_node = pnode;
+			pnode = pback_node->pnext;
+			node_remove_from_list(&plist,pback_node);
+			os_free(pback_node->pnode);
+			pback_node->pnode = NULL;
+			os_free(pback_node);
+			pback_node = NULL;
+		} else {
+			pnode = pnode ->pnext;
+		}
+	}
 }

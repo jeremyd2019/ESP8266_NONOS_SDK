@@ -87,6 +87,7 @@ LOCAL struct esp_platform_saved_param esp_param;
 LOCAL uint8 device_status;
 LOCAL uint8 device_recon_count = 0;
 LOCAL uint32 active_nonce = 0;
+struct rst_info rtc_info;
 void user_esp_platform_check_ip(uint8 reset_flag);
 
 /******************************************************************************
@@ -724,9 +725,9 @@ user_esp_platform_upgrade_rsp(void *arg)
     char *action = NULL;
 
     os_memcpy(devkey, esp_param.devkey, 40);
+    pbuf = (char *)os_zalloc(packet_size);
 
     if (server->upgrade_flag == true) {
-        pbuf = (char *)os_zalloc(packet_size);
         ESP_DBG("user_esp_platform_upgarde_successfully\n");
         action = "device_upgrade_success";
         os_sprintf(pbuf, UPGRADE_FRAME, devkey, action, server->pre_version, server->upgrade_version);
@@ -745,7 +746,7 @@ user_esp_platform_upgrade_rsp(void *arg)
     } else {
         ESP_DBG("user_esp_platform_upgrade_failed\n");
         action = "device_upgrade_failed";
-        os_sprintf(pbuf, UPGRADE_FRAME, devkey, action);
+        os_sprintf(pbuf, UPGRADE_FRAME, devkey, action,server->pre_version, server->upgrade_version);
         ESP_DBG(pbuf);
 
 #ifdef CLIENT_SSL_ENABLE
@@ -841,7 +842,7 @@ user_esp_platform_recv_cb(void *arg, char *pusrdata, unsigned short length)
     os_timer_disarm(&beacon_timer);
 #endif
 
-    if (length == 1024) {
+    if (length == 1460) {
         os_memcpy(pbuffer, pusrdata, length);
     } else {
         struct espconn *pespconn = (struct espconn *)arg;
@@ -871,9 +872,9 @@ user_esp_platform_recv_cb(void *arg, char *pusrdata, unsigned short length)
                 user_platform_rpc_set_rsp(pespconn, nonce);
 
                 server = (struct upgrade_server_info *)os_zalloc(sizeof(struct upgrade_server_info));
-                os_memcpy(server->upgrade_version, pstr + 12, 4);
-                server->upgrade_version[4] = '\0';
-                os_sprintf(server->pre_version, "v%d.%d", SDK_VERSION_MAJOR, SDK_VERSION_MINOR);
+                os_memcpy(server->upgrade_version, pstr + 12, 6);
+                server->upgrade_version[7] = '\0';
+                os_sprintf(server->pre_version, "v%d.%d.%d", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
                 user_esp_platform_upgrade_begin(pespconn, server);
             }
         } else if ((pstr = (char *)os_strstr(pbuffer, "\"action\": \"sys_reboot\"")) != NULL) {
@@ -1048,8 +1049,7 @@ user_esp_platform_connect_cb(void *arg)
     struct espconn *pespconn = arg;
 
     ESP_DBG("user_esp_platform_connect_cb\n");
-
-    if (wifi_get_opmode() ==  STATIONAP_MODE && esp_param.activeflag == 1) {
+    if (wifi_get_opmode() ==  STATIONAP_MODE ) {
         wifi_set_opmode(STATION_MODE);
     }
 
@@ -1243,6 +1243,14 @@ void ICACHE_FLASH_ATTR
 user_esp_platform_init(void)
 {
     user_esp_platform_load_param(&esp_param);
+
+    system_rtc_mem_read(0,&rtc_info,sizeof(struct rst_info));
+     if(rtc_info.flag == 1 || rtc_info.flag == 2) {
+    	 ESP_DBG("flag = %d,epc1 = 0x%08x,epc2=0x%08x,epc3=0x%08x,excvaddr=0x%08x,depc=0x%08x,\nFatal \
+exception (%d): \n",rtc_info.flag,rtc_info.epc1,rtc_info.epc2,rtc_info.epc3,rtc_info.excvaddr,rtc_info.depc,rtc_info.exccause);
+     }
+    struct rst_info info = {0};
+    system_rtc_mem_write(0,&info,sizeof(struct rst_info));
 
 #if AP_CACHE
     wifi_station_ap_number_set(AP_CACHE_NUMBER);
