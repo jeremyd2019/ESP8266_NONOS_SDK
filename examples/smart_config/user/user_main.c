@@ -28,5 +28,6 @@ void user_init(void)
 {
     os_printf("SDK version:%s\n", system_get_sdk_version());
 
+    wifi_set_opmode(STATION_MODE);
     smartconfig_start(SC_TYPE_AIRKISS, smartconfig_done);
 }

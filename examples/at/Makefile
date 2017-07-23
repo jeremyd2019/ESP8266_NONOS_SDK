@@ -74,7 +74,8 @@ LINKFLAGS_eagle.app.v6 = \
 	-lwpa	\
 	-lmain	\
 	-ljson	\
-	-lupgrade\
+	-lupgrade	\
+	-lsmartconfig	\
 	$(DEP_LIBS_eagle.app.v6)					
 
 ifndef AT_OPEN_SRC

@@ -1,16 +1,7 @@
-There are two ways to download AT FW
-
-(1)Old
+Notice: boot_v1.1 is deprecated.
 
 download:
-boot_v1.1.bin      0x00000
-user1.512.old.bin  0x01000
-blank.bin          0x3e000 & 0x7e000
-
-(2)New ( Espressif recommended )
-
-download:
-boot_v1.2+.bin      0x00000
+boot_v1.2+.bin     0x00000
 user1.512.new.bin  0x01000
 blank.bin          0x3e000 & 0x7e000
 
@@ -23,7 +14,7 @@ ex. AT+CWMODE=3
     AT+RST
 
 2.Make sure TE got ip address
-ex. AT+CWJAP="ssid","12345678"
+ex. AT+CWJAP="ssid","password"
     OK
 
     AT+CIFSR
