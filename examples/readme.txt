@@ -9,7 +9,7 @@
     Possible value: none/old/new
       none: no need boot
       old: use boot_v1.1
-      new: use boot_v1.2
+      new: use boot_v1.2+
     Default value: none
 
 (3) APP
@@ -27,12 +27,12 @@
     Possible value: QIO/QOUT/DIO/DOUT
     Default value: QIO
 
-(4) SPI_SIZE
-    Possible value: 256/512/1024/2048/4096
-    Default value: 512
+(4) SPI_SIZE_MAP
+    Possible value: 0/2/3/4/5/6
+    Default value: 0
 
 For example:
-    make COMPILE=gcc BOOT=new APP=1 SPI_SPEED=40 SPI_MODE=QIO SPI_SIZE=512
+    make COMPILE=gcc BOOT=new APP=1 SPI_SPEED=40 SPI_MODE=QIO SPI_SIZE_MAP=0
 
 2¡¢You can also use gen_misc to make and generate specific bin you needed.
     Linux: ./gen_misc.sh
